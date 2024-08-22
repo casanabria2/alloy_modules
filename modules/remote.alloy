@@ -1,0 +1,36 @@
+declare "stack" {
+  argument "stack_name" {
+    comment = "The name of the grafana cloud stack to get the configuration from."
+  }
+
+  argument "token" {
+    comment = "The token to authenticate with the Grafana Cloud API."
+  }
+
+  // Get the configuration from the Grafana Cloud API
+  remote.http "config" {
+    url = "https://grafana.com/api/instances/" + argument.stack_name.value
+    client {
+      bearer_token = argument.token.value
+    }
+    poll_frequency = "2m"
+  }
+
+  // Setup the prometheus remote write receiver
+  prometheus.remote_write "default" {
+    endpoint {
+      url = json_decode(remote.http.config.content)["hmInstancePromUrl"] + "/api/prom/push"
+
+      basic_auth {
+        username = json_decode(remote.http.config.content)["hmInstancePromId"]
+        password = "glc_eyJvIjoiMzc5MjE4IiwibiI6InNhbmRib3gzLWNhcmxvcy10ZXN0LWNhcmxvcy1zYW5kYm94My10b2tlbi1kZWxldGUiLCJrIjoiOElOaTc2OWo5R0x6SEpmMzN6QTU1ZzVQIiwibSI6eyJyIjoicHJvZC11cy1lYXN0LTAifX0="
+      }
+    }
+  }
+
+
+  // Export the receivers
+  export "metrics" {
+    value = prometheus.remote_write.default.receiver
+  }
+}

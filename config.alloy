@@ -1,0 +1,49 @@
+logging {
+	level  = "info"
+	format = "logfmt"
+}
+
+discovery.kubernetes "pods" {
+	role = "pod"
+}
+
+discovery.kubernetes "nodes" {
+	role = "node"
+}
+
+discovery.kubernetes "services" {
+	role = "service"
+}
+
+discovery.kubernetes "endpoints" {
+	role = "endpoints"
+}
+
+discovery.kubernetes "endpointslices" {
+	role = "endpointslice"
+}
+
+discovery.kubernetes "ingresses" {
+	role = "ingress"
+}
+
+import.git "nvidia_grafana_cloud" {
+  repository = "https://github.com/casanabria2/alloy_modules.git"
+  revision = "main"
+  path = "modules/remote.alloy"
+  pull_frequency = "1m"
+}
+
+nvidia_grafana_cloud.stack "receivers" {
+  stack_name = "sandbox3"
+  token = "glc_eyJvIjoiMzc5MjE4IiwibiI6ImNhcmxvcy1hbGxveS1tb2R1bGUtdGVzdC1jYXJsb3MtdGVzdC1kZWxldGUiLCJrIjoiNUQxNDFZSEJUUlZoOVZQZjI5R1E1QzkxIiwibSI6eyJyIjoidXMifX0="
+}
+
+prometheus.scrape "default" {
+  targets = [
+    {"__address__" = "127.0.0.1:12345"},
+  ]
+  forward_to = [
+    nvidia_grafana_cloud.stack.receivers.metrics,
+  ]
+}

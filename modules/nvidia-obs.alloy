@@ -1,0 +1,11 @@
+declare "nvidia-obs" {
+    argument "BU" {
+        comment = "The name of the group or business unit that owns the resources."
+    }
+}
+
+prometheus.relabel "nvidia-obs" {
+    target = "BU"
+    action = "replace"
+    replacement = argument.BU.value
+}
