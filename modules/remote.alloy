@@ -43,6 +43,15 @@ declare "stack" {
   } 
 
   // Setup the loki write receiver
+  // 
+ loki.process "nspect_id" {
+  stage.static_labels {
+      values = {
+        nspect_id = argument.nspect_id.value,
+      }
+    forward_to = [ loki.write.default.receiver ]
+  } 
+
   loki.write "default" {
     endpoint {
       url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
@@ -60,7 +69,7 @@ declare "stack" {
   }
   
   export "logs" {
-    value = loki.write.default.receiver
-  }
+    value = loki.process.nspect_id.receiver
+ }
 
 }
