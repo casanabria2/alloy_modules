@@ -2,12 +2,15 @@ declare "stack" {
   argument "secret_name" {
     comment = "The name of the secret to get the password from."
   }
+  
+  // In this case, we are getting the password from a Kubernetes secret, but this
+  // could be any other source of secrets.
 
   // Get the configuration from the Kubernetes cluster
   remote.kubernetes.secret "gc_password" {
     namespace = "grafana"
     name = coalesce(argument.secret_name.value, "gc-password")
-}
+  }
 
   // Setup the prometheus remote write receiver
   prometheus.remote_write "default" {
@@ -21,9 +24,25 @@ declare "stack" {
       }
   } 
 
+  // Setup the loki write receiver
+  loki.write "default" {
+    endpoint {
+      url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+
+      basic_auth {
+        username = "934149"
+        password = remote.kubernetes.secret.gc_password.data["password"]
+      }
+    }
+  }
+
   // Export the receivers
   export "metrics" {
     value = prometheus.remote_write.default.receiver
   }
   
+  export "logs" {
+    value = loki.write.default.receiver
+  }
+
 }
