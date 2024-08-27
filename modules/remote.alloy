@@ -51,6 +51,7 @@ declare "stack" {
       }
     forward_to = [ loki.write.default.receiver ]
   } 
+ }
 
   loki.write "default" {
     endpoint {
