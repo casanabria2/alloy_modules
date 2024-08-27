@@ -1,18 +1,36 @@
 declare "stack" {
   argument "secret_name" {
     comment = "The name of the secret to get the password from."
+    default = "gc-password"
+    optional = true
   }
   
+  argument "nspect_id" {
+    comment = "The nspect ID for the system we are collecting data from."
+    optional = false
+  }
   // In this case, we are getting the password from a Kubernetes secret, but this
   // could be any other source of secrets.
 
   // Get the configuration from the Kubernetes cluster
   remote.kubernetes.secret "gc_password" {
     namespace = "grafana"
-    name = coalesce(argument.secret_name.value, "gc-password")
+    name = argument.secret_name.value
   }
 
   // Setup the prometheus remote write receiver
+  // 
+
+  prometheus.relabel "nspect_id" {
+    forward_to = [ prometheus.remote_write.default.receiver ]
+    
+    rule {
+      action = "replace"
+      target_label = "nspect_id"
+      replacement = argument.nspect_id.value
+    }
+  }
+
   prometheus.remote_write "default" {
       endpoint {
         url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
@@ -38,7 +56,7 @@ declare "stack" {
 
   // Export the receivers
   export "metrics" {
-    value = prometheus.remote_write.default.receiver
+    value = prometheus.relabel.nspect_id.receiver
   }
   
   export "logs" {
