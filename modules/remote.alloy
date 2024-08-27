@@ -45,11 +45,12 @@ declare "stack" {
   // Setup the loki write receiver
   // 
  loki.process "nspect_id" {
+  forward_to = [ loki.write.default.receiver ]
+
   stage.static_labels {
       values = {
         nspect_id = argument.nspect_id.value,
       }
-    forward_to = [ loki.write.default.receiver ]
   } 
  }
 
