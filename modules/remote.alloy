@@ -16,7 +16,7 @@ declare "stack" {
 
         basic_auth {
           username = 1668483
-          password = remote.kubernetes.secret.metrics_password.data["password"]
+          password = remote.kubernetes.secret.gc_password.data["password"]
         }
       }
   } 
